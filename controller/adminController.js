@@ -3,7 +3,8 @@ const Staff = require("../model/staffModel");
 const Kids = require("../model/babyModel");
 const Plan = require("../model/subscriptonModel");
 const User = require("../model/userModel");
-const { log } = require("console");
+
+
 const postAdminLogin = async (req, res) => {
   try {
     const adminEmail = process.env.ADMIN_EMAIL;
@@ -37,7 +38,7 @@ const addTutor = async (req, res) => {
       adharNo: req.body.adhar,
       image:req.body.image
     });
-    const tutorData = await result.save();
+   await result.save();
 
     res.status(200).json({ status: true });
   } catch (error) {
@@ -46,7 +47,7 @@ const addTutor = async (req, res) => {
 };
 const viewStaffs = async (req, res) => {
   try {
-    const staffs = await Staff.find();
+    const staffs = await Staff.find().populate('kids');
     res.status(200).json({ staffs });
   } catch (error) {
     console.log(error.message);
@@ -54,7 +55,10 @@ const viewStaffs = async (req, res) => {
 };
 const getKids = async (req, res) => {
   try {
-    const kids = await Kids.find().populate("staff");
+    const kids = await Kids.find()
+      .populate("staff")
+      .populate('parent')
+      .populate('subscription');
     res.status(200).json({ kids });
   } catch (error) {
     console.log(error.message);
@@ -103,6 +107,29 @@ const getDash = async (req, res) => {
     data.kids = await Kids.countDocuments();
     data.plans = await Plan.countDocuments();
     data.staffs = await Staff.countDocuments();
+    const baby = await Kids.find().populate('subscription.id');
+    console.log(baby)
+   const total = await Kids.aggregate([
+     {
+       $lookup: {
+         from: "subscriptions",
+         localField: "subscription.id",
+         foreignField: "_id",
+         as: "subscriptionData",
+       },
+     },
+     {
+       $unwind: "$subscriptionData",
+     },
+     {
+       $group: {
+         _id: null,
+         total: { $sum: "$subscriptionData.price" },
+       },
+     },
+   ]).exec();
+    data.totalRevenue = total[0].total;
+
     res.status(200).json({ data });
   } catch (error) {
     console.log(error.message);
@@ -111,7 +138,10 @@ const getDash = async (req, res) => {
 const getBabyProfile = async (req, res) => {
   try {
     const id = req.params.id;
-    const data = await Kids.findOne({ _id: id }).populate("parent");
+    const data = await Kids.findOne({ _id: id })
+      .populate("parent")
+      .populate('staff')
+      .populate('subscription');
     res.status(200).json({ data: data });
   } catch (error) {
     console.log(error.message);
@@ -202,6 +232,15 @@ const deleteStaff = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+const payments = async (req, res) => {
+  try {
+    const data = await Kids.find().populate('parent').populate('subscription.id');
+    res.status(200).json({ data:data})
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 module.exports = {
   postAdminLogin,
@@ -219,4 +258,5 @@ module.exports = {
   getAPlan,
   editPlan,
   deleteStaff,
+  payments,
 };

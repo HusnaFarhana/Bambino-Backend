@@ -72,6 +72,15 @@ const userRegister = async (req, res) => {
   }
 };
 
+const getNav = async (req, res) => {
+  try {
+
+    const data = await User.findById(req.params.id)
+    res.status(200).json({data:data})
+  } catch (error) {
+    
+  }
+}
 const logout = async (req, res) => {
   try {
     const id = req.body.data;
@@ -101,6 +110,7 @@ const registerKid = async (req, res) => {
         id: req.body.plan.id,
         date: new Date(),
         expDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        paymentid:req.body.paymentid
       },
       image: imageUrl,
       parent: req.body.user,
@@ -110,7 +120,9 @@ const registerKid = async (req, res) => {
     await User.findByIdAndUpdate(req.body.user, {
       $push: { mykids: babyData._id },
     });
-
+    await Plan.findByIdAndUpdate(req.body.plan.id, {
+      $push: { users: babyData._id },
+    });
     res.status(200).json({ data: "hi" });
   } catch (error) {
     console.log(error.message);
@@ -264,6 +276,7 @@ const getHome = async (req, res) => {
     console.log(error.message);
   }
 };
+
 const editBaby = async (req, res) => {
   try {
     await Baby.findByIdAndUpdate(
@@ -282,66 +295,20 @@ const editBaby = async (req, res) => {
 };
 const deleteBaby = async (req, res) => {
   try {
-    await Baby.findByIdAndUpdate(req.body.id, {
-      active: false,
-    });
+    // await Baby.findByIdAndUpdate(req.body.id, {
+    //   active: false,
+    // });
+
+     await Baby.findOneAndUpdate(
+       { _id: req.body.id },
+       { $set: { active: false, "subscription.active": false } }
+     );
     res.status(200).json({ success: true });
   } catch (error) {}
 };
 
-// const registerKid=async(req,res)=>{
-//   try {
-//      const kidData = {
-//        name: payment.notes.name,
-//        dob: payment.notes.dob,
-//        gender: payment.notes.gender,
-//        relation: payment.notes.relation,
-//        medical: payment.notes.medical,
-//        plan: payment.notes.plan,
-//        user: payment.notes.user,
-//      };
-//      const result = await Baby(kidData).save();
-//      await User.findByIdAndUpdate(payment.notes.user, {
-//        $push: { mykids: result._id },
-//      });
 
-//   } catch (error) {
 
-//   }
-// }
-
-const verifyPayment = async (req, res) => {
-  try {
-    // console.log(req.body);
-    // const { razorpay_payment_id, razorpay_signature } = req.body;
-
-    // // Verify the payment signature
-    // const generatedSignature = generateSignature(razorpay_payment_id);
-    // if (generatedSignature !== razorpay_signature) {
-    //   return res.status(400).json({ error: "Invalid payment signature" });
-    // }
-
-    // // Fetch payment details from Razorpay
-    // const payment = await razorpay.payments.fetch(razorpay_payment_id);
-    // if (payment.status !== "captured") {
-    //   return res.status(400).json({ error: "Payment not captured" });
-    // }
-
-    // // Payment is successful, register the kid
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Payment verification error:", error);
-    res.status(500).json({ error: "Payment verification failed" });
-  }
-};
-
-// Generate the payment signature using your key secret
-function generateSignature(razorpay_payment_id) {
-  const hmac = crypto.createHmac("sha256", "onv9R6x8O5zCnps1qvRvGu7T");
-  hmac.update(razorpay_payment_id);
-  return hmac.digest("hex");
-}
 
 const removeExpiredSubscriptions = async () => {
   try {
@@ -365,6 +332,7 @@ setInterval(removeExpiredSubscriptions, 6 * 60 * 60 * 1000);
 
 module.exports = {
   getHome,
+  getNav,
   userRegister,
   userLogin,
   userProfile,
@@ -376,5 +344,4 @@ module.exports = {
   logout,
   editBaby,
   deleteBaby,
-  verifyPayment,
 };

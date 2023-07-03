@@ -14,14 +14,11 @@ const subscriptionSchema = new mongoose.Schema({
   price: {
     type: Number,
   },
-  users: [{
-    userId: {
+  users: [
+    {
       type: ObjectId,
-      ref:'User',
-    },
-    date:Date,
-    expires:Date
-  }],
+      ref: 'User',
+    }],
   athome:{
     type:String
   }

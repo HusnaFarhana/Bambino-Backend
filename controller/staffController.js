@@ -11,8 +11,6 @@ const staffLogin = async (req, res) => {
     if (!staff) {
       res.status(401).json({ message: "cannot find staff" });
       }
-      console.log(staff.name);
-      console.log(staff._id);
     if (req.body.password === staff.password) {
       const token = jwt.sign(
         { name: staff.name, staffid: staff._id },
@@ -21,14 +19,12 @@ const staffLogin = async (req, res) => {
           expiresIn: "1h",
         }
       );
-      console.log(token);
       const upd = await Staff.findOneAndUpdate(
         { email: req.body.email },
         {
           $set: { token: token },
         }
       );
-      console.log(upd);
       res.status(200).json({ token });
     } else {
       res.status(401).json({ message: "wrong password" });
@@ -41,7 +37,6 @@ const myProfile=async(req,res)=>{
   try {
     const id=req.params.data
     const staff = await Staff.findOne({ _id: id })
-    console.log(staff);
     res.status(200).json({staff:staff})
   } catch (error) {
     
@@ -51,16 +46,21 @@ const myProfile=async(req,res)=>{
 const getPupils = async (req, res) => {
   try {
 
-    console.log('lljhgfghhjkj');
     const id = req.params.id;
-    const data=await Baby.find({staff:id})
-    console.log(data);
+    const data=await Baby.find({staff:id,active:true}).populate('parent')
     res.status(200).json({ data: data });
   } catch (error) {}
 };
-
+const singleKid = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await Baby.findById(id).populate('parent')
+    res.status(200).json({ data: data });
+  } catch (error) {}
+};
 module.exports = {
   staffLogin,
   myProfile,
   getPupils,
+  singleKid,
 };

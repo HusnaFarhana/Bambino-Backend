@@ -3,13 +3,19 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const socketIO = require("socket.io");
+const io = require("socket.io")(4000, {
+  cors: {
+    origin:['http://localhost:4200']
+  }
+});
 
 const path = require("path");
 var bodyParser = require("body-parser");
 const app = express();
-const server = require("http").Server(app);
-const io = socketIO(server);
+io.on('connection', socket => {
+  console.log(socket.id);
+})
+
 
 
 require("dotenv").config();

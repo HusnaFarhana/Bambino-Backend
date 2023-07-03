@@ -17,4 +17,5 @@ router.post("/edittutor", adminController.editTutor);
 router.get("/getplan/:id", adminController.getAPlan);
 router.post("/editplan", adminController.editPlan);
 router.get("/deletestaff/:id", adminController.deleteStaff);
+router.get("/payments", adminController.payments);
 module.exports = router;

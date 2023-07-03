@@ -35,7 +35,12 @@ const babySchema = new mongoose.Schema({
       ref: "Subscription"
     },
     date: Date,
-    expDate:Date
+    expDate: Date,
+    paymentid: String,
+    active: {
+      type: Boolean,
+      default: true
+    }
   },
   image: {
     type:String
